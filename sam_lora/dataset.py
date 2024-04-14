@@ -25,7 +25,7 @@ def process_mask_image(mask_image):
 
     masks_tensor = torch.tensor(masks_tensor).permute(2, 0, 1)
 
-    return masks_tensor,unique_ids
+    return masks_tensor,torch.tensor(unique_ids)
 
 
 def random_horizontal_flip(image, mask, p=0.5):
@@ -37,7 +37,7 @@ def random_rotation(image, mask, degrees):
     angle = random.uniform(-degrees, degrees)
     return TF.rotate(image, angle), TF.rotate(mask, angle)
 
-def apply_transforms_both(image, mask, p_flip=0.5, degrees=180):
+def apply_transforms_both(image, mask, p_flip=0.5, degrees=0):
     image, mask = random_horizontal_flip(image, mask, p=p_flip)
     image, mask = random_rotation(image, mask, degrees=degrees)
     return image, mask
