@@ -23,8 +23,11 @@ def main():
     parser.add_argument("--wandb_key", type=str,help="wandb user name key",required=False)
     parser.add_argument("--wandb_log_model", type=bool,help="wandb log model",required=False)
 
+
     parser.add_argument("--epochs", type=int, help="epochs_num",required=False,default=100)
-    parser.add_argument("--T_max", type=int, help="T_max for schudler",required=False,default=20)
+    parser.add_argument("--T_max", type=int, help="T_max for schudler,if zero without",required=False,default=0)
+    parser.add_argument("--lr", type=float, help="learning rate",required=False,default=0.001)
+
 
     parser.add_argument("--train_images_path", type=str, help="train images path",required=True)
     parser.add_argument("--train_masks_path", type=str, help="train masks path",required=True)
@@ -58,11 +61,17 @@ def main():
     dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True)
     model = SamLora(sam_type=args.vit_type, r=args.lora_rank, sam_checkpoint=args.sam_checkpoint,
                     log_wandb=args.log_wandb,T_max = args.T_max,
-                    classes_labels_path=args.classes_labels_path)
+                    classes_labels_path=args.classes_labels_path,lr=args.lr)
 
     if args.log_wandb:
         wandb.login(key=args.wandb_key)
-        run = wandb.init(project=args.wandb_project)
+        run = wandb.init(project=args.wandb_project,config = {
+            'vit_type':args.vit_type,
+            'LoRA rank':args.lora_rank,
+            'epochs':args.epochs,
+            'T_max':args.T_max,
+
+        })
         with run:
             logger = pl.loggers.WandbLogger(experiment=run, log_model=args.wandb_log_model)
             trainer = pl.Trainer(accelerator=args.device, max_epochs=args.epochs, logger=logger)

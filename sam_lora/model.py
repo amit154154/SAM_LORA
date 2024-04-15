@@ -1,3 +1,5 @@
+from typing import Any
+
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
@@ -12,7 +14,7 @@ import wandb
 import torchvision.transforms as transforms
 
 class SamLora(pl.LightningModule):
-    def __init__(self, r=2, sam_type='vit_t', sam_checkpoint='', log_wandb=False, T_max=20, classes_labels_path = ""):
+    def __init__(self, r=2, sam_type='vit_t', sam_checkpoint='', log_wandb=False, T_max=0, classes_labels_path = "",lr = 0.001):
         super(SamLora, self).__init__()
         self.log_wandb = log_wandb
         self.model = sam_model_registry[sam_type](checkpoint=sam_checkpoint)
@@ -40,6 +42,7 @@ class SamLora(pl.LightningModule):
 
         self.training_step_outputs = []
         self.validation_step_outputs = []
+        self.lr = lr
 
     def map_gt_masks_to_model_labels(self,gt_masks, gt_labels, model_labels):
         output_masks = []
@@ -51,14 +54,22 @@ class SamLora(pl.LightningModule):
         output_masks = torch.stack(output_masks).squeeze(1)
         return output_masks
 
+    def forward(self, image):
+        input_points = self.input_points.clone().to(image.device)
+        input_labels = torch.tensor(self.input_label).to(image.device)
+        x_input = [{'image': image, 'point_coords': input_points, 'point_labels': input_labels,
+                    'original_size': (image.shape[-2], image.shape[-1])}]
+        sam_output = self.model(x_input, multimask_output=False)[0]
+        return sam_output['mask']
+
 
     def training_step(self, batch, batch_idx):
         # Training step
         x = batch
         input_points = self.input_points.clone().to(x['image'].device)
+        input_labels = torch.tensor(self.input_label).to(x['image'].device)
         gt_masks = self.map_gt_masks_to_model_labels(x['mask'][0],x['unique_ids'][0].tolist(),self.labels_id)
 
-        input_labels = torch.tensor(self.input_label).to(x['image'].device)
         x_input = [{'image': x['image'][0], 'point_coords': input_points, 'point_labels': input_labels,
                     'original_size': (x['image'].shape[-2], x['image'].shape[-1])}]
 
@@ -139,13 +150,14 @@ class SamLora(pl.LightningModule):
     def configure_optimizers(self):
 
         # Use AdamW optimizer
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.001)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
 
         # Add Cosine Annealing Learning Rate Scheduler
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
-                                                               T_max=self.T_max)  # T_max is the number of steps until the next restart
-
-        return {"optimizer": optimizer, "lr_scheduler": scheduler}
+        if self.T_max != 0 :
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
+                                                                   T_max=self.T_max)  # T_max is the number of steps until the next restart
+            return {"optimizer": optimizer, "lr_scheduler": scheduler}
+        return {"optimizer": optimizer}
 
     def configure_callbacks(self):
         # Callback to save the model based on minimum val_loss
@@ -166,13 +178,12 @@ class SamLora(pl.LightningModule):
         return [checkpoint_callback, early_stopping_callback]
 
 
-
-if __name__ == 'main':
+if __name__ ==  "__main__":
     images_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
     masks_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
 
-    images_test_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
-    masks_test_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
+    images_test_dir = '/Users/mac/Documents/datasets/football_segmentation/images_test'
+    masks_test_dir = '/Users/mac/Documents/datasets/football_segmentation/masks_test'
 
     classes_labels_path = "/Users/mac/Documents/datasets/football_segmentation/labels"
 
@@ -182,7 +193,7 @@ if __name__ == 'main':
         transforms.RandomApply([transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2)], p=0.5),
         transforms.RandomApply([transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))], p=0.4)])
 
-    dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms)
+    dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms,degrees=0)
     dataset_test = SamDataset(images_test_dir, masks_test_dir, mask_and_image_transform=False)
 
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
@@ -190,13 +201,13 @@ if __name__ == 'main':
 
 
     if 1:
-        model = SamLora(sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
+        model = SamLora(r=8,sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
 
         run = wandb.init(project='football_segmentation')
         with run:
             logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
             trainer = pl.Trainer(accelerator='mps', max_epochs=300,logger=logger)
-            trainer.fit(model,dataloader,dataloader)
+            trainer.fit(model,dataloader,dataloader_test)
     else:
         model = SamLora(sam_checkpoint=model_path, log_wandb=False, classes_labels_path=classes_labels_path)
         trainer = pl.Trainer(accelerator='mps', max_epochs=200)
