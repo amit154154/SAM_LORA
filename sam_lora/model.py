@@ -12,7 +12,7 @@ import wandb
 import torchvision.transforms as transforms
 
 class SamLora(pl.LightningModule):
-    def __init__(self, r=2, sam_type='vit_t', sam_checkpoint='', log_wandb=True, T_max=20, classes_labels_path = ""):
+    def __init__(self, r=2, sam_type='vit_t', sam_checkpoint='', log_wandb=False, T_max=20, classes_labels_path = ""):
         super(SamLora, self).__init__()
         self.log_wandb = log_wandb
         self.model = sam_model_registry[sam_type](checkpoint=sam_checkpoint)
@@ -56,7 +56,7 @@ class SamLora(pl.LightningModule):
         # Training step
         x = batch
         input_points = self.input_points.clone().to(x['image'].device)
-        gt_masks = self.map_gt_masks_to_model_labels(x['mask'][0],x['unique_ids'][0].tolist(),[79,96,170,213])
+        gt_masks = self.map_gt_masks_to_model_labels(x['mask'][0],x['unique_ids'][0].tolist(),self.labels_id)
 
         input_labels = torch.tensor(self.input_label).to(x['image'].device)
         x_input = [{'image': x['image'][0], 'point_coords': input_points, 'point_labels': input_labels,
@@ -74,7 +74,7 @@ class SamLora(pl.LightningModule):
         total_loss = dice_loss + 20 * f_loss
 
         if self.log_wandb:
-            if batch_idx % 10 == 0:
+            if batch_idx % 50 == 0:
                 sam_masks_copy = sam_output['masks'].clone().detach().cpu().bool()
                 image_tensor = x['image'][0].clone()
                 gt_masks_copy = gt_masks.clone().detach().cpu().bool()
@@ -120,10 +120,7 @@ class SamLora(pl.LightningModule):
 
         # Optionally, you can calculate additional metrics like IoU here as well
         if self.log_wandb:
-            t = 0
-            if self.current_epoch % 2 == 0:
-                t = 1
-            if batch_idx % 4 == t:
+            if batch_idx % 15 == 0:
                 sam_masks_copy = sam_output['masks'].clone().detach().cpu().bool()
                 image_tensor = x['image'][0].clone()
                 gt_masks_copy = gt_masks.clone().detach().cpu().bool()
@@ -170,41 +167,40 @@ class SamLora(pl.LightningModule):
 
 
 
-#if __name__ == 'main':
-images_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
-masks_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
+if __name__ == 'main':
+    images_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
+    masks_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
 
-images_test_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
-masks_test_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
+    images_test_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
+    masks_test_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
 
-classes_labels_path = "/Users/mac/Documents/datasets/football_segmentation/labels"
+    classes_labels_path = "/Users/mac/Documents/datasets/football_segmentation/labels"
 
-model_path = '/Users/mac/PycharmProjects/ALL_Shit/checkpoints/SAM/mobile_sam.pt'
+    model_path = '/Users/mac/PycharmProjects/ALL_Shit/checkpoints/SAM/mobile_sam.pt'
 
-image_only_transforms = transforms.Compose([
-    transforms.RandomApply([transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2)], p=0.5),
-    transforms.RandomApply([transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))], p=0.4)])
+    image_only_transforms = transforms.Compose([
+        transforms.RandomApply([transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2)], p=0.5),
+        transforms.RandomApply([transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))], p=0.4)])
 
-dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms)
-dataset_test = SamDataset(images_test_dir, masks_test_dir, mask_and_image_transform=False)
+    dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms)
+    dataset_test = SamDataset(images_test_dir, masks_test_dir, mask_and_image_transform=False)
 
-dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True)
 
 
-if 1:
-    model = SamLora(sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
+    if 1:
+        model = SamLora(sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
 
-    run = wandb.init(project='football_segmentation')
-    with run:
-        logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
-        trainer = pl.Trainer(accelerator='mps', max_epochs=200,logger=logger)
-        trainer.fit(model,dataloader,dataloader)
-else:
-
-    model = SamLora(sam_checkpoint=model_path, log_wandb=False, classes_labels_path=classes_labels_path)
-    trainer = pl.Trainer(accelerator='mps', max_epochs=200)
-    trainer.fit(model,dataloader,dataloader_test)
+        run = wandb.init(project='football_segmentation')
+        with run:
+            logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
+            trainer = pl.Trainer(accelerator='mps', max_epochs=300,logger=logger)
+            trainer.fit(model,dataloader,dataloader)
+    else:
+        model = SamLora(sam_checkpoint=model_path, log_wandb=False, classes_labels_path=classes_labels_path)
+        trainer = pl.Trainer(accelerator='mps', max_epochs=200)
+        trainer.fit(model,dataloader,dataloader_test)
 
 
 

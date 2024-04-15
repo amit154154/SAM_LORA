@@ -45,7 +45,7 @@ def apply_transforms_both(image, mask, p_flip=0.5, degrees=0):
 
 class SamDataset(Dataset):
     def __init__(self, images_dir, masks_dir, imgs_num=None, image_specific_transform=None,
-                 mask_and_image_transform=True, bbox_mod_prob=0, bbox_mod_px=40):
+                 mask_and_image_transform=True,p_flip =0.5,degrees=90):
         """
         Custom dataset for semantic segmentation.
         """
@@ -61,10 +61,9 @@ class SamDataset(Dataset):
                 self.images = random.sample(all_images, imgs_num)  # Randomly select imgs_num images
         else:
             self.images = sorted(os.listdir(images_dir))  # Use all images if imgs_num is None
+        self.p_flip = p_flip
+        self.degrees = degrees
         self.mask_and_image_transform = mask_and_image_transform
-        self.bbox_mod_px = bbox_mod_px
-        self.bbox_mod_prob = bbox_mod_prob
-
     def __len__(self):
         return len(self.images)
 
@@ -78,7 +77,7 @@ class SamDataset(Dataset):
         mask = cv2.imread(mask_name, cv2.IMREAD_GRAYSCALE)
         mask = cv2.resize(mask, (image.shape[2], image.shape[1]), interpolation=cv2.INTER_NEAREST)
         if self.mask_and_image_transform:
-            image, mask = apply_transforms_both(image, Image.fromarray(mask))
+            image, mask = apply_transforms_both(image, Image.fromarray(mask),self.p_flip,self.degrees)
         if self.image_specific_transform is not None:
             image = self.image_specific_transform(image)
         masks,unique_ids = process_mask_image(np.array(mask))
