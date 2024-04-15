@@ -13,7 +13,6 @@ previous works in the subject such as PerSAM gives worst results and cant utiliz
 ## Example
 
 I trained using this method on few shot  [football dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
-
 I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 
 1. Advertisement
@@ -23,6 +22,37 @@ I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 5. team red
 6. team black
 7. refree
+
+
+<table>
+<tr>
+<th>Ground Truth Segmentation</th>
+<th>Predicted Segmentation</th>
+</tr>
+<tr>
+<td>
+
+![Ground Truth](/Users/mac/PycharmProjects/SAM_LORA/assets/gt_1.png)
+</td>
+<td>
+
+![Predicted](/Users/mac/PycharmProjects/SAM_LORA/assets/predicted_1.png)
+</td>   
+</tr>
+<tr>
+<td>
+
+![Ground Truth](/Users/mac/PycharmProjects/SAM_LORA/assets/gt_2.png)
+</td>
+<td>
+
+![Predicted](/Users/mac/PycharmProjects/SAM_LORA/assets/predicted_2.png)
+</td>   
+</tr>
+
+</table>
+
+
 
 ### more detils
 
@@ -52,6 +82,6 @@ git clone https://github.com/amit154154/SAM_LORA.git
 
 sort your dataset such that there is a folder of train images, folder of segmentation masks and the same for training.
 create a txt file such that each line is the class id (which it has in the segmentation masks) and the class name.
-look at the example.
+look at the example(labels_example).
 
 
