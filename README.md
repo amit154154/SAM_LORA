@@ -32,21 +32,21 @@ I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 <tr>
 <td>
 
-![Ground Truth](/Users/mac/PycharmProjects/SAM_LORA/assets/gt_1.png)
+![Ground Truth](assets/gt_1.png)
 </td>
 <td>
 
-![Predicted](/Users/mac/PycharmProjects/SAM_LORA/assets/predicted_1.png)
+![Predicted](assets/predicted_1.png)
 </td>   
 </tr>
 <tr>
 <td>
 
-![Ground Truth](/Users/mac/PycharmProjects/SAM_LORA/assets/gt_2.png)
+![Ground Truth](assets/gt_2.png)
 </td>
 <td>
 
-![Predicted](/Users/mac/PycharmProjects/SAM_LORA/assets/predicted_2.png)
+![Predicted](assets/predicted_2.png)
 </td>   
 </tr>
 
