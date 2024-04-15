@@ -52,9 +52,9 @@ I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 
 </table>
 
+I split it such there are 70 training images and 30 validation.
 
-
-### more detils
+### more details
 
 I use the same loss as in the paper of SAM (except mse between the predicted iou to), for now it
 generate random point to encode for each class.
