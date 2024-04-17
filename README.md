@@ -10,7 +10,57 @@ Using LoRA we can leverage the SAM model to segment classes we want using very f
 use of any prompt(given manual or using a detection model such as grounding sam, yolo world etc...)
 previous works in the subject such as PerSAM gives worst results and cant utilize diffrent classes
 
-## Example
+## COCO
+
+I trained using this method on coco2017,
+I trained using vit_t (MobileSAM) with LoRA rank 16
+on these super classes:
+
+0. person
+1. vehicle
+2. outdoor
+3. animal
+4. accessory
+5. sports
+6. kitchen
+7. food
+8. furniture
+9. electronic
+10. appliance
+11. indoor
+
+<table>
+<tr>
+<th>Ground Truth Segmentation</th>
+<th>Predicted Segmentation</th>
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_coco_1.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_coco_1.png)
+</td>   
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_coco_2.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_coco_2.png)
+</td>   
+</tr>
+
+</table>
+
+
+Note: this is the results after 36000 steps. 
+
+## Football dataset
 
 I trained using this method on few shot  [football dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
 I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
