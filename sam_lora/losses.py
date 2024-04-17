@@ -124,6 +124,23 @@ def soft_iou_loss(preds, targets, eps=1e-6):
     # Return the mean IoU loss over the batch
     return soft_iou_loss.mean(),iou
 
+def class_accuracy_loss(predictions, targets):
+    """
+    Calculate categorical cross-entropy loss for class predictions.
+
+    Args:
+        predictions (tensor): Logits from the model of shape [batch_size, num_classes, height, width] or [batch_size, 1, height, width] for binary classification.
+        targets (tensor): Ground truth labels of shape [batch_size, 1, height, width] with class indices.
+
+    Returns:
+        torch.Tensor: Loss value.
+    """
+    # Ensure targets are of type torch.long and squeeze the second dimension if it exists
+    targets = targets.squeeze(1).float()  # This will change shape from (k, 1, w, h) to (k, w, h)
+    predictions = predictions.squeeze(1).float()
+
+    loss = F.cross_entropy(predictions, targets, reduction='mean')
+    return loss
 
 def overlay_masks(image_tensor, mask_tensor):
     # image_tensor: torch.Tensor of shape (3, w, h)
@@ -167,3 +184,4 @@ def overlay_masks(image_tensor, mask_tensor):
     pil_image = Image.fromarray(final_image)
 
     return pil_image
+

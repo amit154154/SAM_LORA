@@ -62,8 +62,8 @@ generate random point to encode for each class.
 ## TBD
 
 
-- [ ] test on coco dataset with diffrent amount of annotations
-- [ ] add diffrent loss, for class precision 
+- [X] test on coco dataset with diffrent amount of annotations
+- [X] add diffrent loss, for class precision 
 - [ ] implament for efficentvit SAM
 - [ ] test diffrent LoRA ranks
 - [ ] test PISSA (which is what right now) vs regular LoRA

@@ -1,12 +1,15 @@
 import numpy as np
 import torch
 import random
-import torchvision.transforms.functional as TF
 import cv2
-import os
-from torch.utils.data import Dataset
+
 from mobile_sam.utils.transforms import ResizeLongestSide
 from PIL import Image
+from torch.utils.data import Dataset
+from torchvision.io import read_image
+from torchvision.transforms import functional as TF
+from pycocotools.coco import COCO
+import os
 
 def process_mask_image(mask_image):
     unique_ids = np.unique(mask_image)
@@ -85,3 +88,70 @@ class SamDataset(Dataset):
         sample = {'image': image, 'mask': masks,'unique_ids':unique_ids}
 
         return sample
+
+
+class COCODataset(Dataset):
+    def __init__(self, root, annotation, transforms=None):
+        self.root = root
+        self.coco = COCO(annotation)
+        self.transforms = transforms
+        self.ids = list(sorted(self.coco.imgs.keys()))
+        self.supercategory_to_id = {}
+        self.categories = self.coco.loadCats(self.coco.getCatIds())
+        self.category_to_supercategory = {cat['id']: cat['supercategory'] for cat in self.categories}
+        self.supercategory_to_id = {}
+        categories = self.coco.loadCats(self.coco.getCatIds())
+        for cat in categories:
+            supercat = cat['supercategory']
+            if supercat not in self.supercategory_to_id:
+                self.supercategory_to_id[supercat] = len(self.supercategory_to_id)
+
+    def __getitem__(self, index):
+        img_id = self.ids[index]
+        path = self.coco.loadImgs(img_id)[0]['file_name']
+        image = read_image(os.path.join(self.root, path))
+
+        ann_ids = self.coco.getAnnIds(imgIds=img_id)
+        anns = self.coco.loadAnns(ann_ids)
+
+        # Create a dictionary to combine masks by category ID
+        combined_masks = {}
+        for ann in anns:
+            category_id = ann['category_id']
+            super_catagory = self.category_to_supercategory[category_id]
+            category_id = self.supercategory_to_id[super_catagory]
+            mask = self.coco.annToMask(ann)
+            if category_id in combined_masks:
+                # Combine masks by logical OR
+                combined_masks[category_id] = np.logical_or(combined_masks[category_id], mask).astype(np.uint8)
+            else:
+                combined_masks[category_id] = mask
+
+        # Convert combined masks to tensors
+
+        masks = [torch.tensor(combined_masks[key], dtype=torch.uint8) for key in sorted(combined_masks)]
+        category_ids = torch.tensor(list(sorted(combined_masks.keys())), dtype=torch.int64)
+
+        if self.transforms:
+            image, masks = self.transforms(image, masks)
+        if len(masks) == 0:
+            sample = {'image': image, 'mask': torch.zeros((1, image.shape[1], image.shape[2])),
+                      'unique_ids': torch.zeros(1)}
+            return sample
+        masks = torch.stack(masks)
+        sample = {'image': image, 'mask': masks, 'unique_ids': category_ids}
+
+        return sample
+
+    def __len__(self):
+        return len(self.ids)
+
+    def transforms(self, image, masks):
+        image = TF.convert_image_dtype(image, dtype=torch.float)
+        masks = [torch.tensor(mask, dtype=torch.uint8) for mask in masks]
+        return image, masks
+
+    def get_category_names(self):
+        categories = self.coco.loadCats(self.coco.getCatIds())
+        category_names = {cat['id']: cat['name'] for cat in categories}
+        return category_names
