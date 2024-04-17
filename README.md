@@ -61,6 +61,44 @@ on these super classes:
 Note: this is the results after 36000 steps. 
 It looks like there is a lot of noise in some sitution between some of the classes at 36000 steps point, it's imporving,
 I am training on macbook give me some slack (: 
+
+After that I train on a smaller number of classes:
+1.  person
+2. vehicle
+3. animal
+4. food
+
+which looks alot more stable 
+
+
+<table>
+<tr>
+<th>Ground Truth Segmentation</th>
+<th>Predicted Segmentation</th>
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_coco_3.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_coco_3.png)
+</td>   
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_coco_2.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_coco_2.png)
+</td>   
+</tr>
+
+</table>
+
 ## Football dataset
 
 I trained using this method on few shot  [football dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
