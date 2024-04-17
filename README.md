@@ -59,7 +59,8 @@ on these super classes:
 
 
 Note: this is the results after 36000 steps. 
-
+It looks like there is a lot of noise in some sitution between some of the classes at 36000 steps point, it's imporving,
+I am training on macbook give me some slack (: 
 ## Football dataset
 
 I trained using this method on few shot  [football dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
@@ -103,7 +104,6 @@ I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 </table>
 
 I split it such there are 70 training images and 30 validation.
-
 ### more details
 
 I use the same loss as in the paper of SAM (except mse between the predicted iou to), for now it
