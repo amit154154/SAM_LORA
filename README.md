@@ -87,17 +87,40 @@ which looks alot more stable
 </td>   
 </tr>
 <tr>
+
+
+</tr>
+
+
+</table>
+
+After that I train with only one the class of person, the results were very accurate with very minimal
+false positive and negative, also it looks like sometimes the predicted mask is even more strict on the person then the not very good ground
+truth of coco
+
+<table>
+<tr>
+<th>Ground Truth Segmentation</th>
+<th>Predicted Segmentation</th>
+</tr>
+<tr>
 <td>
 
-![Ground Truth](assets/gt_coco_2.png)
+![Ground Truth](assets/gt_coco_person.png)
 </td>
 <td>
 
-![Predicted](assets/predicted_coco_2.png)
+![Predicted](assets/predicted_coco_person.png)
 </td>   
 </tr>
+<tr>
+
+
+</tr>
+
 
 </table>
+
 
 ## Football dataset
 
