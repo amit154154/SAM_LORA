@@ -96,7 +96,7 @@ which looks alot more stable
 
 After that I train with only one the class of person, the results were very accurate with very minimal
 false positive and negative, also it looks like sometimes the predicted mask is even more strict on the person then the not very good ground
-truth of coco
+truth of coco as you can see in the image below that the mask on the man with the baseball bat looks much better in the predicted mask.
 
 <table>
 <tr>
