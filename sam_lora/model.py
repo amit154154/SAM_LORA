@@ -79,10 +79,10 @@ class SamLora(pl.LightningModule):
         dice_loss, _ = cal_dice_loss(gt_masks, x['mask'])
         f_loss = focal_loss(sam_output['masks_grad'], gt_masks)
         _, real_iou = soft_iou_loss(sam_output['masks_grad'], gt_masks)
-        cross_entropy_loss = class_accuracy_loss(sam_output['masks_grad'].float(), gt_masks.float())  * 0.1
+        cross_entropy_loss = class_accuracy_loss(sam_output['masks_grad'].float(), gt_masks.float()) * 0.01
         iou_predection_loss = nn.MSELoss()(sam_output['iou_predictions'], real_iou)
 
-        total_loss = dice_loss + 20 * f_loss + cross_entropy_loss + iou_predection_loss
+        total_loss = 20 * f_loss + iou_predection_loss + cross_entropy_loss
 
         if self.log_wandb:
             if batch_idx % 50 == 0:
@@ -125,10 +125,9 @@ class SamLora(pl.LightningModule):
         f_loss = focal_loss(sam_output['masks_grad'], gt_masks)
         _, real_iou = soft_iou_loss(sam_output['masks_grad'], gt_masks)
         iou_predection_loss = nn.MSELoss()(sam_output['iou_predictions'], real_iou)
-        cross_entropy_loss = class_accuracy_loss(sam_output['masks_grad'], gt_masks) * 0.1
+        cross_entropy_loss = class_accuracy_loss(sam_output['masks_grad'], gt_masks) * 0.01
 
-
-        total_loss = dice_loss + 20 * f_loss + cross_entropy_loss  + iou_predection_loss
+        total_loss =  20 * f_loss + iou_predection_loss + cross_entropy_loss
 
         # Optionally, you can calculate additional metrics like IoU here as well
         if self.log_wandb:
@@ -180,55 +179,55 @@ class SamLora(pl.LightningModule):
 
 
 if __name__ ==  "__main__":
-    # images_dir = '/Users/mac/Documents/datasets/football_segmentation/images'
-    # masks_dir = '/Users/mac/Documents/datasets/football_segmentation/masks'
-    #
-    # images_test_dir = '/Users/mac/Documents/datasets/football_segmentation/images_test'
-    # masks_test_dir = '/Users/mac/Documents/datasets/football_segmentation/masks_test'
-    #
-    # classes_labels_path = "/Users/mac/Documents/datasets/football_segmentation/labels"
-    #
-    # model_path = '/Users/mac/PycharmProjects/ALL_Shit/checkpoints/SAM/mobile_sam.pt'
-    #
-    # image_only_transforms = transforms.Compose([
-    #     transforms.RandomApply([transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2)], p=0.5),
-    #     transforms.RandomApply([transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))], p=0.4)])
-    #
-    # dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms,degrees=0)
-    # dataset_test = SamDataset(images_test_dir, masks_test_dir, mask_and_image_transform=False)
-    #
-    # dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-    # dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True)
-    #
-    #
-    # if 1:
-    #     model = SamLora(r=8,sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
-    #
-    #     run = wandb.init(project='football_segmentation')
-    #     with run:
-    #         logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
-    #         trainer = pl.Trainer(accelerator='mps', max_epochs=300,logger=logger)
-    #         trainer.fit(model,dataloader,dataloader_test)
-    # else:
-    #     model = SamLora(sam_checkpoint=model_path, log_wandb=False, classes_labels_path=classes_labels_path)
-    #     trainer = pl.Trainer(accelerator='mps', max_epochs=200)
-    #     trainer.fit(model,dataloader,dataloader_test)
+    images_dir = '/Users/mac/Documents/datasets/Cityspaces/images/train/all'
+    masks_dir = '/Users/mac/Documents/datasets/Cityspaces/gtFine/train/all'
 
-    dataset_train = COCODataset(root='/Users/mac/Documents/datasets/coco/train2017/train2017',
-                          annotation='/Users/mac/Documents/datasets/coco/annotations_trainval2017/annotations/instances_train2017.json')
-    dataset_val = COCODataset(root='/Users/mac/Documents/datasets/coco/val2017/val2017',
-                          annotation='/Users/mac/Documents/datasets/coco/annotations_trainval2017/annotations/instances_val2017.json')
+    images_test_dir = '/Users/mac/Documents/datasets/Cityspaces/images/val/all'
+    masks_test_dir = '/Users/mac/Documents/datasets/Cityspaces/gtFine/val/all'
 
-    classes_labels_path = "/Users/mac/Documents/datasets/coco/labels_super.txt"
+    classes_labels_path = "/Users/mac/Documents/datasets/Cityspaces/labels"
+
     model_path = '/Users/mac/PycharmProjects/ALL_Shit/checkpoints/SAM/mobile_sam.pt'
-    dataloader_train = DataLoader(dataset_train, batch_size=1, shuffle=True)
-    dataloader_val = DataLoader(dataset_val, batch_size=1, shuffle=True)
 
-    model = SamLora(r=16, sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
-    run = wandb.init(project='coco_segmentation')
-    with run:
-        logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
-        trainer = pl.Trainer(accelerator='mps', max_epochs=2,logger=logger)
-        trainer.fit(model,dataloader_train,dataloader_val)
+    image_only_transforms = transforms.Compose([
+        transforms.RandomApply([transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.2)], p=0),
+        transforms.RandomApply([transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5))], p=0)])
+
+    dataset = SamDataset(images_dir, masks_dir, mask_and_image_transform=True,image_specific_transform= image_only_transforms,degrees=0)
+    dataset_test = SamDataset(images_test_dir, masks_test_dir, mask_and_image_transform=False)
+
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True)
+
+
+    if 1:
+        model = SamLora(r=2,sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
+
+        run = wandb.init(project='Cityspaces_segmentation')
+        with run:
+            logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
+            trainer = pl.Trainer(accelerator='mps', max_epochs=10,logger=logger)
+            trainer.fit(model,dataloader,dataloader_test)
+    else:
+        model = SamLora(sam_checkpoint=model_path, log_wandb=False, classes_labels_path=classes_labels_path)
+        trainer = pl.Trainer(accelerator='mps', max_epochs=200)
+        trainer.fit(model,dataloader,dataloader_test)
+
+    # dataset_train = COCODataset(root='/Users/mac/Documents/datasets/coco/train2017/train2017',
+    #                       annotation='/Users/mac/Documents/datasets/coco/annotations_trainval2017/annotations/instances_train2017.json')
+    # dataset_val = COCODataset(root='/Users/mac/Documents/datasets/coco/val2017/val2017',
+    #                       annotation='/Users/mac/Documents/datasets/coco/annotations_trainval2017/annotations/instances_val2017.json')
+    #
+    # classes_labels_path = "/Users/mac/Documents/datasets/coco/labels_super.txt"
+    # model_path = '/Users/mac/PycharmProjects/ALL_Shit/checkpoints/SAM/mobile_sam.pt'
+    # dataloader_train = DataLoader(dataset_train, batch_size=1, shuffle=True)
+    # dataloader_val = DataLoader(dataset_val, batch_size=1, shuffle=True)
+    #
+    # model = SamLora(r=16, sam_checkpoint=model_path, log_wandb=True, classes_labels_path=classes_labels_path)
+    # run = wandb.init(project='coco_segmentation')
+    # with run:
+    #     logger = pl.loggers.WandbLogger(experiment=run, log_model=False)
+    #     trainer = pl.Trainer(accelerator='mps', max_epochs=2,logger=logger)
+    #     trainer.fit(model,dataloader_train,dataloader_val)
 
 

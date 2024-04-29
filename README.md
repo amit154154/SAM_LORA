@@ -10,7 +10,9 @@ Using LoRA we can leverage the SAM model to segment classes we want using very f
 use of any prompt(given manual or using a detection model such as grounding sam, yolo world etc...)
 previous works in the subject such as PerSAM gives worst results and cant utilize diffrent classes
 
-## COCO
+## Examples
+
+### COCO
 
 I trained using this method on coco2017,
 I trained using vit_t (MobileSAM) with LoRA rank 16
@@ -122,9 +124,9 @@ truth of coco as you can see in the image below that the mask on the man with th
 </table>
 
 
-## Football dataset
+### Soccer dataset
 
-I trained using this method on few shot  [football dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
+I trained using this method on few shot  [Soccer dataset](https://www.kaggle.com/datasets/sadhliroomyprime/football-semantic-segmentation)
 I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 
 1. Advertisement
@@ -165,10 +167,40 @@ I trained using vit_t (MobileSAM) with LoRA rank 8, with those classes:
 </table>
 
 I split it such there are 70 training images and 30 validation.
-### more details
+### Cityscapes
 
-I use the same loss as in the paper of SAM and added cross_entropy loss for now it
-generate random point to encode for each class.
+I trained on [Cityscapes](https://www.cityscapes-dataset.com) dataset with four classes:
+1. cars
+2. building
+3. road
+4. people
+
+<table>
+<tr>
+<th>Ground Truth Segmentation</th>
+<th>Predicted Segmentation</th>
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_cityscapes.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_cityscapes.png)
+</td>   
+</tr>
+<tr>
+<td>
+
+![Ground Truth](assets/gt_cityscapes_2.png)
+</td>
+<td>
+
+![Predicted](assets/predicted_cityscapes_2.png)
+</td>   
+</tr>
+</table>
 
 ## TBD
 
@@ -176,8 +208,6 @@ generate random point to encode for each class.
 - [X] test on coco dataset with diffrent amount of annotations
 - [X] add diffrent loss, for class precision 
 - [ ] implament for efficentvit SAM
-- [ ] test diffrent LoRA ranks
-- [ ] test PISSA (which is what right now) vs regular LoRA
 
 
 ## Getting Started
@@ -194,5 +224,12 @@ git clone https://github.com/amit154154/SAM_LORA.git
 sort your dataset such that there is a folder of train images, folder of segmentation masks and the same for training.
 create a txt file such that each line is the class id (which it has in the segmentation masks) and the class name.
 look at the example(labels_example).
+
+### train the model
+look at the params you need to add in train.py
+
+```bash
+python train.py
+```
 
 

@@ -42,7 +42,6 @@ def main():
 
     parser.add_argument("--device", type=str, help="device to train with",required=False,default="mps")
 
-
     args = parser.parse_args()
 
     image_only_transforms = None

@@ -173,7 +173,7 @@ def overlay_masks(image_tensor, mask_tensor):
 
     # Blend original image with mask overlay
     # Adjust blending factor to change visibility
-    alpha = 0.5  # transparency factor
+    alpha = 0.25  # transparency factor
     final_image = (1 - alpha) * img + alpha * mask_overlay
 
     # Ensure the final image is within correct bounds
